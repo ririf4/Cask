@@ -22,5 +22,3 @@ fun <K, V> CaskBuilder<K, V>.onEvict(block: (K, V?) -> Unit) =
     onEvict(CaskBiConsumer { k, v -> block(k, v) })
 
 fun <K, V> CaskBuilder<K, V>.allowNullValues() = allowNullValues(true)
-
-fun <K, V> CaskBuilder<K, V>.evictionPolicy(policy: EvictionPolicy) = evictionPolicy(policy)

@@ -15,7 +15,7 @@ class CaskBuilderImpl<K, V> : CaskBuilder<K, V> {
     private lateinit var iTtl: Duration
     private var iMaxSize: Int? = null
     private lateinit var iLoader: CaskLoader<K, V>
-    private var iOnEvict: CaskBiConsumer<K, V>? = null
+    private var iEvictor: CaskBiConsumer<K, V>? = null
     private var allowNulls: Boolean = false
     private var evictionPolicy: EvictionPolicy = EvictionPolicy.LRU
     private var customEviction: EvictionStrategy<K, CacheEntry<V>>? = null
@@ -38,7 +38,7 @@ class CaskBuilderImpl<K, V> : CaskBuilder<K, V> {
     }
 
     override fun onEvict(evictor: CaskBiConsumer<K, V>): CaskBuilder<K, V> {
-        this.iOnEvict = evictor
+        this.iEvictor = evictor
         return this
     }
 
@@ -84,6 +84,6 @@ class CaskBuilderImpl<K, V> : CaskBuilder<K, V> {
             else -> throw IllegalStateException("GC executor must be shared or explicitly provided")
         }
 
-        return CaskImpl(iTtl, iMaxSize!!, iLoader, iOnEvict, allowNulls, evictionPolicy, customEviction, gc)
+        return CaskImpl(iTtl, iMaxSize!!, iLoader, iEvictor, allowNulls, evictionPolicy, customEviction, gc)
     }
 }
