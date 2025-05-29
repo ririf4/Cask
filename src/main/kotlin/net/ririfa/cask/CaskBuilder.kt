@@ -1,6 +1,7 @@
 package net.ririfa.cask
 
 import net.ririfa.cask.impl.CaskBuilderImpl
+import net.ririfa.cask.util.CaskLoader
 import net.ririfa.cask.util.EvictionPolicy
 import java.time.Duration
 import java.util.concurrent.ScheduledExecutorService
@@ -8,7 +9,7 @@ import java.util.concurrent.ScheduledExecutorService
 interface CaskBuilder<K, V> {
     fun ttl(ttl: Duration): CaskBuilder<K, V>
     fun maxSize(size: Int): CaskBuilder<K, V>
-    fun loader(loader: Function1<K, V>): CaskBuilder<K, V>
+    fun loader(loader: CaskLoader<K, V>): CaskBuilder<K, V>
     fun onEvict(onEvict: CaskBiConsumer<K, V>): CaskBuilder<K, V>
     fun allowNullValues(allow: Boolean): CaskBuilder<K, V>
     fun evictionPolicy(policy: EvictionPolicy): CaskBuilder<K, V>

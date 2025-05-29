@@ -22,7 +22,7 @@ class CaskImpl<K, V>(
 
     private val cache = object : LinkedHashMap<K, CacheEntry<V>>(maxSize, 0.75f, evictionPolicy.accessOrder) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<K, CacheEntry<V>>): Boolean {
-            val custom = customEviction?.shouldEvict(this, eldest.key, eldest.value) ?: false
+            val custom = customEviction?.shouldEvict(this, eldest.key, eldest.value) == true
             val default = when (evictionPolicy) {
                 EvictionPolicy.NONE -> false
                 else -> size > maxSize

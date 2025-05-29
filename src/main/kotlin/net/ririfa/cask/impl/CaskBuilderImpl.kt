@@ -32,7 +32,7 @@ class CaskBuilderImpl<K, V> : CaskBuilder<K, V> {
         return this
     }
 
-    override fun loader(loader: (K) -> V): CaskBuilder<K, V> {
+    override fun loader(loader: CaskLoader<K, V>): CaskBuilder<K, V> {
         this.iLoader = loader
         return this
     }

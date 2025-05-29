@@ -1,16 +1,15 @@
 package net.ririfa.cask
 
 import net.ririfa.cask.util.CaskLoader
-import net.ririfa.cask.util.EvictionPolicy
 import java.time.Duration
 
 fun <K, V> cask(init: CaskBuilder<K, V>.() -> Unit): Cask<K, V> {
     return CaskBuilder.newBuilder<K, V>().apply(init).build()
 }
 
-var <K, V> CaskBuilder<K, V>.ttl: Duration
+var <K, V> CaskBuilder<K, V>.ttl: Long
     get() = throw UnsupportedOperationException("Write-only")
-    set(value) { ttl(value) }
+    set(value) { ttl(Duration.ofSeconds(value)) }
 
 var <K, V> CaskBuilder<K, V>.maxSize: Int
     get() = throw UnsupportedOperationException("Write-only")
