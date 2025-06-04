@@ -65,6 +65,12 @@ class CaskImpl<K, V>(
         }
     }
 
+    override fun clear() {
+        synchronized(cache) {
+            cache.clear()
+        }
+    }
+
     override fun refresh(key: K) {
         val loaded = loader.invoke(key) ?: return
         put(key, loaded)

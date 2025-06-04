@@ -15,9 +15,9 @@ var <K, V> CaskBuilder<K, V>.maxSize: Int
     get() = throw UnsupportedOperationException("Write-only")
     set(value) { maxSize(value) }
 
-fun <K, V> CaskBuilder<K, V>.loader(block: CaskLoader<K, V>) = loader(block)
+fun <K, V> CaskBuilder<K, V>.loader(block: CaskLoader<K, V>) = this.loader(block)
 
 fun <K, V> CaskBuilder<K, V>.onEvict(block: (K, V?) -> Unit) =
-    onEvict(CaskBiConsumer { k, v -> block(k, v) })
+    this.onEvict(CaskBiConsumer { k, v -> block(k, v) })
 
-fun <K, V> CaskBuilder<K, V>.allowNullValues() = allowNullValues(true)
+fun <K, V> CaskBuilder<K, V>.allowNullValues() = this.allowNullValues(true)
