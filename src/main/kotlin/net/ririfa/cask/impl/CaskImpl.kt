@@ -20,6 +20,8 @@ class CaskImpl<K, V>(
     gcExecutor: ScheduledExecutorService
 ) : Cask<K, V> {
 
+    private val ttlMillis = ttl.toMillis()
+
     private val cache = object : LinkedHashMap<K, CacheEntry<V>>(maxSize, 0.75f, evictionPolicy.accessOrder) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<K, CacheEntry<V>>): Boolean {
             val custom = customEviction?.shouldEvict(this, eldest.key, eldest.value) == true
@@ -37,19 +39,26 @@ class CaskImpl<K, V>(
     }
 
     override fun get(key: K): V? {
+        val now = System.currentTimeMillis()
+
+        // まずキャッシュをチェック（短い同期ブロック）
         synchronized(cache) {
-            val now = System.currentTimeMillis()
             val entry = cache[key]
-            if (entry != null && now - entry.createdAt < ttl.toMillis()) {
+            if (entry != null && now - entry.createdAt < ttlMillis) {
                 entry.lastAccessedAt = now
                 return entry.value
             }
-
-            val loaded = loader.invoke(key) ?: return null
-            put(key, loaded)
-            entry?.lastAccessedAt = now
-            return loaded
         }
+
+        // loaderを同期ブロック外で実行してロック時間を最小化
+        val loaded = loader.invoke(key) ?: return null
+
+        // ロード結果をキャッシュに追加
+        synchronized(cache) {
+            cache[key] = CacheEntry(loaded, now)
+        }
+
+        return loaded
     }
 
     override fun put(key: K, value: V?) {
@@ -70,11 +79,11 @@ class CaskImpl<K, V>(
         put(key, loaded)
     }
 
-    override fun size(): Int = cache.size
+    override fun size(): Int = synchronized(cache) { cache.size }
 
     data class CacheEntry<V>(
         val value: V?,
-        var createdAt: Long = System.currentTimeMillis(),
+        val createdAt: Long,
         var lastAccessedAt: Long = createdAt
     )
 
@@ -84,17 +93,15 @@ class CaskImpl<K, V>(
             val expiredKeys = mutableListOf<K>()
 
             synchronized(cache) {
-                for ((key, entry) in cache) {
-                    if (now - entry.createdAt >= ttl.toMillis()) {
+                cache.entries.forEach { (key, entry) ->
+                    if (now - entry.createdAt >= ttlMillis) {
                         expiredKeys.add(key)
                     }
                 }
 
-                for (key in expiredKeys) {
+                expiredKeys.forEach { key ->
                     val removed = cache.remove(key)
-                    if (removed != null) {
-                        onEvict?.accept(key, removed.value)
-                    }
+                    removed?.let { onEvict?.accept(key, it.value) }
                 }
             }
         }, 5_000, 5_000, TimeUnit.MILLISECONDS)

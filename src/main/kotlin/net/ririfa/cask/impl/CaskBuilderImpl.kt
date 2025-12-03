@@ -12,14 +12,14 @@ import java.time.Duration
 import java.util.concurrent.ScheduledExecutorService
 
 class CaskBuilderImpl<K, V> : CaskBuilder<K, V> {
-    private lateinit var iTtl: Duration
-    private var iMaxSize: Int? = null
-    private lateinit var iLoader: CaskLoader<K, V>
+    private var iTtl: Duration = Duration.ofMinutes(10)
+    private var iMaxSize: Int = 100
+    private var iLoader: CaskLoader<K, V>? = null
     private var iEvictor: CaskBiConsumer<K, V>? = null
     private var allowNulls: Boolean = false
     private var evictionPolicy: EvictionPolicy = EvictionPolicy.LRU
     private var customEviction: EvictionStrategy<K, CacheEntry<V>>? = null
-    private var sharedGcExecutor: Boolean = false
+    private var sharedGcExecutor: Boolean = true
     private var customGcExecutor: ScheduledExecutorService? = null
 
     override fun ttl(ttl: Duration): CaskBuilder<K, V> {
@@ -69,10 +69,10 @@ class CaskBuilderImpl<K, V> : CaskBuilder<K, V> {
     }
 
     override fun build(): Cask<K, V> {
-        if (!::iTtl.isInitialized || iMaxSize == null || !::iLoader.isInitialized) {
-            throw IllegalStateException("CaskBuilder is not properly initialized. Ensure ttl, maxSize, and loader are set.")
+        if (iLoader == null) {
+            throw IllegalStateException("CaskBuilder is not properly initialized. Loader is required.")
         }
-        if (iMaxSize!! <= 0) {
+        if (iMaxSize <= 0) {
             throw IllegalArgumentException("maxSize must be greater than 0")
         }
         if (evictionPolicy == EvictionPolicy.CUSTOM && customEviction == null) {
@@ -84,6 +84,6 @@ class CaskBuilderImpl<K, V> : CaskBuilder<K, V> {
             else -> throw IllegalStateException("GC executor must be shared or explicitly provided")
         }
 
-        return CaskImpl(iTtl, iMaxSize!!, iLoader, iEvictor, allowNulls, evictionPolicy, customEviction, gc)
+        return CaskImpl(iTtl, iMaxSize, iLoader!!, iEvictor, allowNulls, evictionPolicy, customEviction, gc)
     }
 }
