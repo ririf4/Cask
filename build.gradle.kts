@@ -1,18 +1,19 @@
+import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.withType
+import org.jetbrains.dokka.gradle.tasks.DokkaGeneratePublicationTask
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import java.net.HttpURLConnection
 import java.net.URI
 
 plugins {
-    kotlin("jvm") version "2.1.20"
+    kotlin("jvm") version "2.2.21"
     id("org.jetbrains.dokka") version "2.0.0"
-
     `maven-publish`
 }
 
 group = "net.ririfa"
-version = "0.0.1+alpha.2"
+version = "1.0.0"
 
 repositories {
     mavenCentral()
@@ -22,28 +23,18 @@ dependencies {
     api("org.slf4j:slf4j-api:2.1.0-alpha1")
 }
 
-java {
-    withSourcesJar()
-    withJavadocJar()
+java { withSourcesJar() }
 
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
-}
+kotlin { jvmToolchain { languageVersion.set(JavaLanguageVersion.of(17)) } }
 
-kotlin {
-    jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
-    }
-}
+tasks.withType<KotlinCompile> { compilerOptions { jvmTarget.set(JvmTarget.JVM_17) } }
 
-tasks.withType<KotlinCompile> {
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_17)
-    }
-}
+tasks.withType<JavaCompile> { options.release.set(17) }
 
-tasks.withType<JavaCompile> {
-    options.release.set(17)
+tasks.register<Jar>("javadocJar") {
+    dependsOn(tasks.named("dokkaGeneratePublicationHtml"))
+    from(tasks.named<DokkaGeneratePublicationTask>("dokkaGeneratePublicationHtml").flatMap { it.outputDirectory })
+    archiveClassifier.set("javadoc")
 }
 
 tasks.withType<PublishToMavenRepository>().configureEach {
@@ -85,6 +76,7 @@ publishing {
             version = project.version.toString()
 
             from(components["java"])
+            artifact(tasks.named("javadocJar"))
 
             pom {
                 name.set(project.name)

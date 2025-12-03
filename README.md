@@ -1,7 +1,6 @@
 # Cask
 
-[![Maven Central](https://img.shields.io/maven-central/v/net.ririfa/Cask)](https://central.sonatype.com/artifact/net.ririfa/Cask)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Maven Central](https://img.shields.io/badge/dynamic/xml?url=https://repo.ririfa.net/repository/maven-public/net/ririfa/cask/maven-metadata.xml&query=/metadata/versioning/latest&style=plastic&logo=sonatype&label=Nexus)](https://central.sonatype.com/artifact/net.ririfa/Cask)
 
 A lightweight, high-performance caching library for Kotlin
 
@@ -20,7 +19,7 @@ A lightweight, high-performance caching library for Kotlin
 
 ```kotlin
 dependencies {
-    implementation("net.ririfa:Cask:0.0.1+alpha.2")
+    implementation("net.ririfa:cask:[version]")
 }
 ```
 
@@ -28,7 +27,7 @@ dependencies {
 
 ```groovy
 dependencies {
-    implementation 'net.ririfa:Cask:0.0.1+alpha.2'
+    implementation 'net.ririfa:cask:[version]'
 }
 ```
 
@@ -37,8 +36,8 @@ dependencies {
 ```xml
 <dependency>
     <groupId>net.ririfa</groupId>
-    <artifactId>Cask</artifactId>
-    <version>0.0.1+alpha.2</version>
+    <artifactId>cask</artifactId>
+    <version>[version]</version>
 </dependency>
 ```
 
@@ -294,4 +293,4 @@ Pull requests and issue reports are welcome!
 
 - [GitHub Repository](https://github.com/ririf4/Cask)
 - [Issue Tracker](https://github.com/ririf4/Cask/issues)
-- [Maven Central](https://central.sonatype.com/artifact/net.ririfa/Cask)
+- [Nexus](https://repo.ririfa.net/#browse/browse:maven-public:net/ririfa/cask)
