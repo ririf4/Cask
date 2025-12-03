@@ -3,18 +3,18 @@
 [![Maven Central](https://img.shields.io/maven-central/v/net.ririfa/Cask)](https://central.sonatype.com/artifact/net.ririfa/Cask)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-軽量で高性能なKotlinキャッシュライブラリ
+A lightweight, high-performance caching library for Kotlin
 
-## 特徴
+## Features
 
-- **シンプルで直感的なDSL** - Kotlinの言語機能を活かした読みやすいAPI
-- **柔軟な退去戦略** - LRU、LFU、FIFO、カスタム戦略に対応
-- **自動期限切れ管理** - TTLベースの自動エントリ削除
-- **軽量設計** - 外部依存はSLF4Jのみ
-- **スレッドセーフ** - マルチスレッド環境でも安全に使用可能
-- **null値対応** - オプションでnull値のキャッシュが可能
+- **Simple and Intuitive DSL** - Readable API leveraging Kotlin's language features
+- **Flexible Eviction Strategies** - Built-in LRU, FIFO, and custom strategies
+- **Automatic Expiration Management** - TTL-based automatic entry removal
+- **Lightweight Design** - Only external dependency is SLF4J
+- **Thread-Safe** - Safe to use in multi-threaded environments
+- **Null Value Support** - Optional support for caching null values
 
-## インストール
+## Installation
 
 ### Gradle (Kotlin DSL)
 
@@ -42,72 +42,72 @@ dependencies {
 </dependency>
 ```
 
-## クイックスタート
+## Quick Start
 
-### 基本的な使い方
+### Basic Usage
 
 ```kotlin
 import net.ririfa.cask.cask
 
-// 最小限の設定でキャッシュを作成
+// Create a cache with minimal configuration
 val cache = cask<String, String> {
     loader { key ->
-        // データベースやAPIからデータをロード
+        // Load data from database or API
         fetchFromDatabase(key)
     }
 }
 
-// キャッシュからデータを取得（存在しない場合はloaderが実行される）
+// Get data from cache (loader will be invoked if not present)
 val value = cache.get("user:123")
 
-// 手動でデータを追加
+// Manually add data
 cache.put("user:456", userData)
 
-// エントリを無効化
+// Invalidate an entry
 cache.invalidate("user:123")
 
-// データを再ロード
+// Refresh data
 cache.refresh("user:123")
 ```
 
-### 詳細設定
+### Advanced Configuration
 
 ```kotlin
 val cache = cask<String, User> {
-    // TTL設定（デフォルト: 10分）
-    ttlMinutes = 30  // 30分
-    // または
+    // TTL configuration (default: 10 minutes)
+    ttlMinutes = 30  // 30 minutes
+    // or
     ttlSeconds = 1800
     ttlHours = 1
 
-    // 最大サイズ（デフォルト: 100）
+    // Maximum size (default: 100)
     maxSize = 1000
 
-    // データローダー（必須）
+    // Data loader (required)
     loader { userId ->
         userRepository.findById(userId)
     }
 
-    // 退去時のコールバック（オプション）
+    // Eviction callback (optional)
     onEvict { key, value ->
         logger.info("Evicted: $key")
     }
 
-    // null値を許可（デフォルト: false）
+    // Allow null values (default: false)
     allowNullValues()
 
-    // LRU戦略（デフォルト）
+    // LRU strategy (default)
     lru = true
 }
 ```
 
-## 退去戦略
+## Eviction Strategies
 
-Caskは2つの組み込み退去戦略を提供します：
+Cask provides 2 built-in eviction strategies:
 
-### LRU (Least Recently Used) - デフォルト
+### LRU (Least Recently Used) - Default
 
-最も長い間アクセスされていないエントリを削除します。
+Removes entries that haven't been accessed for the longest time.
 
 ```kotlin
 val cache = cask<String, String> {
@@ -118,7 +118,7 @@ val cache = cask<String, String> {
 
 ### FIFO (First In First Out)
 
-最も古く追加されたエントリを削除します。
+Removes the oldest entries first.
 
 ```kotlin
 val cache = cask<String, String> {
@@ -127,9 +127,9 @@ val cache = cask<String, String> {
 }
 ```
 
-### カスタム退去戦略
+### Custom Eviction Strategy
 
-独自の退去ロジックを実装できます：
+Implement your own eviction logic:
 
 ```kotlin
 import net.ririfa.cask.EvictionStrategy
@@ -143,7 +143,7 @@ val cache = cask<String, String> {
             key: String,
             value: String
         ): Boolean {
-            // カスタムロジック
+            // Custom logic
             return value.length > 1000
         }
     })
@@ -151,9 +151,9 @@ val cache = cask<String, String> {
 }
 ```
 
-## 高度な使い方
+## Advanced Usage
 
-### TimeUnit を使用したTTL設定
+### TTL Configuration with TimeUnit
 
 ```kotlin
 import java.util.concurrent.TimeUnit
@@ -164,7 +164,7 @@ val cache = cask<String, String> {
 }
 ```
 
-### カスタムGCエグゼキューター
+### Custom GC Executor
 
 ```kotlin
 import java.util.concurrent.Executors
@@ -177,17 +177,17 @@ val cache = cask<String, String> {
     loader { key -> loadData(key) }
 }
 
-// アプリケーション終了時
+// On application shutdown
 customExecutor.shutdown()
 ```
 
-### 共有GCエグゼキューター（デフォルト）
+### Shared GC Executor (Default)
 
-複数のキャッシュインスタンスで単一のGCスレッドを共有します：
+Share a single GC thread across multiple cache instances:
 
 ```kotlin
 val cache1 = cask<String, String> {
-    shareGcExecutor(true)  // デフォルト
+    shareGcExecutor(true)  // default
     loader { key -> loadData(key) }
 }
 
@@ -196,27 +196,27 @@ val cache2 = cask<Int, User> {
     loader { id -> loadUser(id) }
 }
 
-// アプリケーション終了時
+// On application shutdown
 CaskRuntime.shutdown()
 ```
 
-## ベストプラクティス
+## Best Practices
 
-1. **ローダー関数を軽量に保つ** - ローダー内で重い処理を避け、必要に応じて別途キャッシュ層を設ける
-2. **適切なTTLを設定** - データの更新頻度に応じてTTLを調整
-3. **maxSizeの適切な設定** - メモリ使用量とキャッシュヒット率のバランスを考慮
-4. **退去コールバックの活用** - デバッグやメトリクス収集に`onEvict`を使用
-5. **GCエグゼキューターの共有** - 複数のキャッシュインスタンスがある場合は共有GCエグゼキューターを使用
+1. **Keep Loader Functions Lightweight** - Avoid heavy processing in loaders; use additional cache layers if needed
+2. **Set Appropriate TTL** - Adjust TTL based on data update frequency
+3. **Configure maxSize Properly** - Balance between memory usage and cache hit rate
+4. **Utilize Eviction Callbacks** - Use `onEvict` for debugging and metrics collection
+5. **Share GC Executor** - Use shared GC executor when you have multiple cache instances
 
-## パフォーマンス
+## Performance
 
-- **メモリ効率**: 軽量な内部データ構造でメモリ使用量を最小化
-- **スレッドセーフ**: 同期化ブロックを最小限に抑え、高いスループットを実現
-- **GC最適化**: バックグラウンドスレッドで期限切れエントリを定期的にクリーンアップ（5秒間隔）
+- **Memory Efficient**: Minimized memory usage with lightweight internal data structures
+- **Thread-Safe**: High throughput with minimal synchronization blocks
+- **GC Optimized**: Background thread periodically cleans up expired entries (every 5 seconds)
 
-## 使用例
+## Examples
 
-### Webアプリケーションでのユーザーデータキャッシュ
+### User Data Caching in Web Applications
 
 ```kotlin
 class UserService(private val userRepository: UserRepository) {
@@ -243,7 +243,7 @@ class UserService(private val userRepository: UserRepository) {
 }
 ```
 
-### APIレスポンスキャッシュ
+### API Response Caching
 
 ```kotlin
 class ApiClient {
@@ -262,7 +262,7 @@ class ApiClient {
 }
 ```
 
-### 計算結果のメモ化
+### Memoization of Computation Results
 
 ```kotlin
 class Calculator {
@@ -282,15 +282,15 @@ class Calculator {
 }
 ```
 
-## ライセンス
+## License
 
-このプロジェクトはMITライセンスの下でライセンスされています。詳細は[LICENSE](LICENSE)ファイルをご覧ください。
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
 
-## 貢献
+## Contributing
 
-プルリクエストやイシューの報告を歓迎します！
+Pull requests and issue reports are welcome!
 
-## リンク
+## Links
 
 - [GitHub Repository](https://github.com/ririf4/Cask)
 - [Issue Tracker](https://github.com/ririf4/Cask/issues)
