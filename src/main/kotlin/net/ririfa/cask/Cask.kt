@@ -4,6 +4,7 @@ interface Cask<K, V> {
     fun get(key: K): V?
     fun put(key: K, value: V?)
     fun invalidate(key: K)
+    fun clear()
     fun refresh(key: K)
     fun size(): Int
 }
