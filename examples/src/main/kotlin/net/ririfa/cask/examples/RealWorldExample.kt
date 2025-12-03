@@ -4,21 +4,21 @@ import net.ririfa.cask.cask
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * 実際のアプリケーションでの使用例
- * データベースアクセスをシミュレートしたキャッシュ層の実装
+ * Real-world application example
+ * Implementation of a cache layer simulating database access
  */
 fun main() {
     println("=== Real-World Example: Database Cache ===\n")
 
-    // データベースへのアクセス回数をカウント
+    // Count database access
     val dbAccessCount = AtomicInteger(0)
 
-    // ユーザーサービス
+    // User service
     val userService = UserService(dbAccessCount)
 
     println("Scenario 1: Multiple reads of same user\n")
 
-    // 同じユーザーを複数回読み込む
+    // Read the same user multiple times
     repeat(3) { i ->
         println("Request ${i + 1}:")
         val user = userService.getUser("user:100")
@@ -28,7 +28,7 @@ fun main() {
 
     println("Scenario 2: Multiple users\n")
 
-    // 複数のユーザーを読み込む
+    // Read multiple users
     val userIds = listOf("user:101", "user:102", "user:103")
     userIds.forEach { userId ->
         println("Fetching $userId:")
@@ -39,12 +39,12 @@ fun main() {
 
     println("Scenario 3: User update and cache invalidation\n")
 
-    // ユーザー情報を更新
+    // Update user information
     println("Updating user:100...")
     userService.updateUser(User("user:100", "Updated Name", "updated@example.com"))
     println("  Cache invalidated for user:100")
 
-    // 更新後のユーザー情報を取得
+    // Fetch updated user information
     println("\nFetching user:100 after update:")
     val updatedUser = userService.getUser("user:100")
     println("  Result: $updatedUser")
@@ -54,7 +54,7 @@ fun main() {
 }
 
 /**
- * ユーザーエンティティ
+ * User entity
  */
 data class User(
     val id: String,
@@ -63,13 +63,13 @@ data class User(
 )
 
 /**
- * データベースアクセスをシミュレートするリポジトリ
+ * Repository simulating database access
  */
 class UserRepository(private val accessCounter: AtomicInteger) {
     private val database = mutableMapOf<String, User>()
 
     init {
-        // 初期データ
+        // Initial data
         database["user:100"] = User("user:100", "Alice", "alice@example.com")
         database["user:101"] = User("user:101", "Bob", "bob@example.com")
         database["user:102"] = User("user:102", "Charlie", "charlie@example.com")
@@ -77,44 +77,44 @@ class UserRepository(private val accessCounter: AtomicInteger) {
     }
 
     fun findById(userId: String): User? {
-        // データベースアクセスをシミュレート
+        // Simulate database access
         accessCounter.incrementAndGet()
-        Thread.sleep(100)  // DB遅延をシミュレート
+        Thread.sleep(100)  // Simulate DB latency
         println("    [DB] Loading from database: $userId")
         return database[userId]
     }
 
     fun save(user: User) {
         accessCounter.incrementAndGet()
-        Thread.sleep(50)  // DB遅延をシミュレート
+        Thread.sleep(50)  // Simulate DB latency
         println("    [DB] Saving to database: ${user.id}")
         database[user.id] = user
     }
 }
 
 /**
- * キャッシュ層を持つユーザーサービス
+ * User service with cache layer
  */
 class UserService(accessCounter: AtomicInteger) {
     private val repository = UserRepository(accessCounter)
 
-    // ユーザーデータキャッシュ
+    // User data cache
     private val userCache = cask<String, User> {
-        // 15分間キャッシュ
+        // Cache for 15 minutes
         ttlMinutes = 15
 
-        // 最大1000ユーザー
+        // Maximum 1000 users
         maxSize = 1000
 
-        // LRU戦略
+        // LRU strategy
         lru = true
 
-        // キャッシュミス時にDBからロード
+        // Load from DB on cache miss
         loader { userId ->
             repository.findById(userId)
         }
 
-        // 退去時のログ出力
+        // Log on eviction
         onEvict { userId, user ->
             println("  [Cache] Evicted: $userId")
         }
@@ -125,15 +125,15 @@ class UserService(accessCounter: AtomicInteger) {
     }
 
     fun updateUser(user: User) {
-        // DBに保存
+        // Save to DB
         repository.save(user)
 
-        // キャッシュを無効化して最新データを保証
+        // Invalidate cache to ensure fresh data
         userCache.invalidate(user.id)
     }
 
     fun refreshUser(userId: String) {
-        // 強制的に最新データをロード
+        // Force load fresh data
         userCache.refresh(userId)
     }
 

@@ -41,7 +41,7 @@ class CaskImpl<K, V>(
     override fun get(key: K): V? {
         val now = System.currentTimeMillis()
 
-        // まずキャッシュをチェック（短い同期ブロック）
+        // Check cache first (short synchronization block)
         synchronized(cache) {
             val entry = cache[key]
             if (entry != null && now - entry.createdAt < ttlMillis) {
@@ -50,10 +50,10 @@ class CaskImpl<K, V>(
             }
         }
 
-        // loaderを同期ブロック外で実行してロック時間を最小化
+        // Execute loader outside synchronization block to minimize lock time
         val loaded = loader.invoke(key) ?: return null
 
-        // ロード結果をキャッシュに追加
+        // Add loaded result to cache
         synchronized(cache) {
             cache[key] = CacheEntry(loaded, now)
         }
