@@ -32,7 +32,7 @@ var <K, V> CaskBuilder<K, V>.maxSize: Int
 fun <K, V> CaskBuilder<K, V>.loader(block: CaskLoader<K, V>) = loader(block)
 
 fun <K, V> CaskBuilder<K, V>.onEvict(block: (K, V?) -> Unit) =
-    onEvict(CaskBiConsumer { k, v -> block(k, v) })
+    onEvict { k, v -> block(k, v) }
 
 fun <K, V> CaskBuilder<K, V>.allowNullValues() = allowNullValues(true)
 
